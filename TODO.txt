@@ -1,0 +1,7 @@
+To do:
+- Join & leave messages
+- Kanye, Elon, joke APIs
+- Update $list
+- Random monkey pics
+- Voice commands?
+- Moderation commands?
