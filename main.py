@@ -6,15 +6,16 @@ import random
 import time
 from replit import db
 from keep_running import keep_running
+import re
 
 client = discord.Client()
 
-monkey_words = ["oo oo", "ooh ooh", "ah ah", "ahh ahh", "ooh ah", "oo ah", "ah oo", "ah ooh", "monkey", "monke"]
+monkey_words = ["oo oo", "ooh ooh", "ah ah", "ahh ahh", "ooh ah", "oo ah", "ah oo", "ah ooh", "monkey", "monke", "monkee"]
 
 monkey_response = [
   "ooh ooh ah ah",
   "oo oo",
-  "who wrote this article?",
+  "who in the blazes wrote this article?",
   "ahh ahh ahh",
   "b a n a n a",
   "monke",
@@ -25,8 +26,29 @@ monkey_response = [
 banned_words = [
   "jew",
   "kys",
-  "kill yourself",
-  "retard"
+  "kill",
+  "retard",
+  "holocaust",
+  "rape",
+  "murder",
+  "suicide",
+  "whore",
+  "pussy",
+  "homo",
+  "faggot",
+  "dyke",
+  "bussy",
+  "cunt",
+  "queer",
+  "dussy",
+  "shoot",
+  "gun",
+  "knife",
+  "hurt",
+  "injure",
+  "racis",
+  "@",
+  "kkk"
 ]
 
 if "active" not in db.keys():
@@ -61,22 +83,34 @@ def delete_quote(index):
   if len(quotes) > index:
     del quotes[index]
     db["quotes"] = quotes
+
+def check_banned(quote):
+  testQuote = quote.lower().replace(" ", "")
+  testQuote = re.sub('[^A-Za-z0-9 ]+', '', testQuote)
+  print(testQuote)
+  if any(word in testQuote for word in banned_words):
+    return True
+  else:
+    return False
   
 @client.event
 async def on_message(message):
   msg = message.content
-
+  
   if message.author == client.user:
     return
   
   if msg.startswith('$hello'):
     await message.channel.send('Hello!')
 
+  if msg.startswith('$clear'):
+    db["quotes"] = []
+
   if msg.startswith('$updates'):
     await message.channel.send('Coming soon: $joke, $kanye, $elon, more images, and more!')
 
   if msg.startswith('$help'):
-    await message.channel.send('Supported commands: $help, $hello, $updates, $monke, $quote, $new, $del, $list; append an h to the beginning of a command to get help with it (ex: $hnew for help with the $new command)')
+    await message.channel.send('Supported commands: $help, $hello, $updates, $monke, $quote, $new, $del, $list, $toggle; append an h to the beginning of a command to get help with it (ex: $hnew for help with the $new command)')
 
   if msg.startswith('$monke'):
     await message.channel.send(file=discord.File('monkey.png'))
@@ -93,31 +127,40 @@ async def on_message(message):
 
   if msg.startswith('$quote'):
     if db["quotes"] == []:
-      await message.channel.send("No quotes!")
+      await message.channel.send("No quotes added!")
     else:
       await message.channel.send(random.choice(db["quotes"]))
 
   if msg.startswith('$new'):
-    if any(word in msg for word in banned_words):
-      await message.channel.send("That quote doesn't seem so nice...")
+    quote = msg.split("$new ", 1)[1]
+    if check_banned(quote) == True:
+      await message.channel.send("Please be nice, use only alphanumeric characters, and don't @ people!")
     else:
-      quote = msg.split("$new ", 1)[1]
-      update_quotes(quote)
-      await message.channel.send("New quote added!")
+      if len(quote) > 150:
+        await message.channel.send("That quote is too long...")
+      else:
+        update_quotes(quote)
+        await message.channel.send("New quote added!")
 
   if msg.startswith('$del'):
     quotes = []
     if "quotes" in db.keys():
-      index = int(msg.split("$del", 1)[1])
-      delete_quote(index)
+      index = msg.split("$del", 1)[1]
+      
+      try:
+        val = int(index)
+      except ValueError:
+        await message.channel.send("That is not a valid index...")
+
+      delete_quote(val)
+      await message.channel.send(', '.join(str(x) for x in db["quotes"]))
       quotes = db["quotes"]
-    await message.channel.send(quotes)
 
   if msg.startswith('$list'):
     quotes = []
     if "quotes" in db.keys():
       quotes = db["quotes"]
-    await message.channel.send(quotes)
+    await message.channel.send(', '.join(str(x) for x in db["quotes"]))
 
   if msg.startswith('$toggle'):
     value = msg.split("$toggle ", 1)[1]
