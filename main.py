@@ -51,13 +51,15 @@ banned_words = [
   "kkk"
 ]
 
-if "active" not in db.keys():
-  db["active"] = True
-
+# Setup
 @client.event
 async def on_ready():
   print('Successfully logged in as {0.user}'.format(client))
 
+if "active" not in db.keys():
+  db["active"] = True
+
+# API Functions
 """
 def get_kanye_quote():
   response = requests.get("https://api.kanye.rest")
@@ -70,6 +72,7 @@ def get_elon_quote():
   return(json_data)
 """
 
+# Quoting Functions
 def update_quotes(quote):
   if "quotes" in db.keys():
     quotes = db["quotes"]
@@ -85,6 +88,8 @@ def delete_quote(index):
     db["quotes"] = quotes
 
 def check_banned(quote):
+  if any(word in quote for word in banned_words):
+    return True
   testQuote = quote.lower().replace(" ", "")
   testQuote = re.sub('[^A-Za-z0-9 ]+', '', testQuote)
   print(testQuote)
@@ -92,45 +97,23 @@ def check_banned(quote):
     return True
   else:
     return False
-  
+
+# Client Events
 @client.event
 async def on_message(message):
+
+  # Creates msg variable for ease of access
   msg = message.content
-  
+
+  # Ignore messages from self
   if message.author == client.user:
     return
-  
+
+  # Beginner hello function
   if msg.startswith('$hello'):
     await message.channel.send('Hello!')
 
-  if msg.startswith('$clear'):
-    db["quotes"] = []
-
-  if msg.startswith('$updates'):
-    await message.channel.send('Coming soon: $joke, $kanye, $elon, more images, and more!')
-
-  if msg.startswith('$help'):
-    await message.channel.send('Supported commands: $help, $hello, $updates, $monke, $quote, $new, $del, $list, $toggle; append an h to the beginning of a command to get help with it (ex: $hnew for help with the $new command)')
-
-  if msg.startswith('$monke'):
-    await message.channel.send(file=discord.File('monkey.png'))
-
-  """
-  if msg.startswith('$kanye'):
-    quote = get_kanye_quote
-    await message.channel.send(quote)
-
-  if msg.startswith('$elon'):
-    quote = get_elon_quote
-    await message.channel.send(quote)
-  """
-
-  if msg.startswith('$quote'):
-    if db["quotes"] == []:
-      await message.channel.send("No quotes added!")
-    else:
-      await message.channel.send(random.choice(db["quotes"]))
-
+  # Create a new quote
   if msg.startswith('$new'):
     quote = msg.split("$new ", 1)[1]
     if check_banned(quote) == True:
@@ -142,8 +125,8 @@ async def on_message(message):
         update_quotes(quote)
         await message.channel.send("New quote added!")
 
+  # Delete a quote
   if msg.startswith('$del'):
-    quotes = []
     if "quotes" in db.keys():
       index = msg.split("$del", 1)[1]
       
@@ -151,17 +134,51 @@ async def on_message(message):
         val = int(index)
       except ValueError:
         await message.channel.send("That is not a valid index...")
-
       delete_quote(val)
       await message.channel.send(', '.join(str(x) for x in db["quotes"]))
-      quotes = db["quotes"]
 
+  # Pull a random quote
+  if msg.startswith('$quote'):
+    if db["quotes"] == []:
+      await message.channel.send("No quotes in database!")
+    else:
+      await message.channel.send(random.choice(db["quotes"]))
+
+  # List all quotes
   if msg.startswith('$list'):
-    quotes = []
-    if "quotes" in db.keys():
-      quotes = db["quotes"]
-    await message.channel.send(', '.join(str(x) for x in db["quotes"]))
+    if db["quotes"] == []:
+      await message.channel.send("No quotes in database!")
+    elif "quotes" in db.keys():
+      await message.channel.send(', '.join(str(x) for x in db["quotes"]))
+    
+  # Hidden clear function
+  if msg.startswith('$clear'):
+    db["quotes"] = []
 
+  # Check future updates
+  if msg.startswith('$updates'):
+    await message.channel.send('Coming soon: $joke, $kanye, $elon, more images, and more!')
+
+  # Diplay all usable commands
+  if msg.startswith('$help'):
+    await message.channel.send('Supported commands: $help, $hello, $updates, $monke, $quote, $new, $del, $list, $toggle; append an h to the beginning of a command to get help with it (ex: $hnew for help with the $new command)')
+
+  # Get a monkey picture
+  if msg.startswith('$monke'):
+    await message.channel.send(file=discord.File('monkey.png'))
+
+  # Quote APIs
+  """
+  if msg.startswith('$kanye'):
+    quote = get_kanye_quote
+    await message.channel.send(quote)
+
+  if msg.startswith('$elon'):
+    quote = get_elon_quote
+    await message.channel.send(quote)
+  """
+
+  # Toggles monkey word detection on and off
   if msg.startswith('$toggle'):
     value = msg.split("$toggle ", 1)[1]
     if value.lower() == "true":
@@ -170,13 +187,15 @@ async def on_message(message):
     else:
       db["active"] = False
       await message.channel.send("Monkey detection is inactive")
-  
+
+  # Monkey word detection
   if db["active"]:
     if any(word in msg for word in monkey_words):
       await message.channel.send(random.choice(monkey_response))
     if msg.startswith('banana'):
       await message.channel.send('Where?!')
 
+  #Help functions
   if msg.startswith('$hhello'):
     await message.channel.send('$hello is used to print out a simple greeting')
 
@@ -213,5 +232,6 @@ async def on_message(message):
   if msg.startswith('$hupdates'):
     await message.channel.send('$updates is used to display planned additions to the bot')
 
+# Links code to bot and keeps it running
 keep_running()
 client.run(os.environ.get('TOKEN'))
