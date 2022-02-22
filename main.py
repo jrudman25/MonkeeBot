@@ -48,13 +48,16 @@ banned_words = [
   "injure",
   "racis",
   "@",
-  "kkk"
+  "kkk",
+  "stab",
+  "shoot"
 ]
 
-# Setup
+# Setup and rich presence settings
 @client.event
 async def on_ready():
   print('Successfully logged in as {0.user}'.format(client))
+  await client.change_presence(activity=discord.Game(name="$help to get started!"))
 
 if "active" not in db.keys():
   db["active"] = True
@@ -113,8 +116,22 @@ async def on_message(message):
   if msg.startswith('$hello'):
     await message.channel.send('Hello!')
 
+  # Toggles monkey word detection on and off
+  if msg.startswith('$toggle'):
+    print('{0} tried to toggle monkey detection'.format(message.author))
+    value = msg.split("$toggle ", 1)[1]
+    if value.lower() == "true":
+      db["active"] = True
+      await message.channel.send("Monkey detection is active")
+    elif value.lower() == "false":
+      db["active"] = False
+      await message.channel.send("Monkey detection is inactive")
+    else:
+      await message.channel.send("I don't recognize that request")
+
   # Create a new quote
   if msg.startswith('$new'):
+    print('{0} tried to add a new quote'.format(message.author))
     quote = msg.split("$new ", 1)[1]
     if check_banned(quote) == True:
       await message.channel.send("Please be nice, use only alphanumeric characters, and don't @ people!")
@@ -134,6 +151,7 @@ async def on_message(message):
         val = int(index)
       except ValueError:
         await message.channel.send("That is not a valid index...")
+      print('{0} deleted a quote'.format(message.author))
       delete_quote(val)
       await message.channel.send(', '.join(str(x) for x in db["quotes"]))
 
@@ -154,18 +172,19 @@ async def on_message(message):
   # Hidden clear function
   if msg.startswith('$clear'):
     db["quotes"] = []
+    print('{0} cleared the database'.format(message.author))
 
   # Check future updates
   if msg.startswith('$updates'):
     await message.channel.send('Coming soon: $joke, $kanye, $elon, more images, and more!')
 
-  # Diplay all usable commands
-  if msg.startswith('$help'):
-    await message.channel.send('Supported commands: $help, $hello, $updates, $monke, $quote, $new, $del, $list, $toggle; append an h to the beginning of a command to get help with it (ex: $hnew for help with the $new command)')
-
   # Get a monkey picture
   if msg.startswith('$monke'):
     await message.channel.send(file=discord.File('monkey.png'))
+    
+  # Diplay all usable commands
+  if msg.startswith('$help'):
+    await message.channel.send('Supported commands: $help, $hello, $updates, $monke, $quote, $new, $del, $list, $toggle; append an h to the beginning of a command to get help with it (ex: $hnew for help with the $new command)')
 
   # Quote APIs
   """
@@ -177,16 +196,6 @@ async def on_message(message):
     quote = get_elon_quote
     await message.channel.send(quote)
   """
-
-  # Toggles monkey word detection on and off
-  if msg.startswith('$toggle'):
-    value = msg.split("$toggle ", 1)[1]
-    if value.lower() == "true":
-      db["active"] = True
-      await message.channel.send("Monkey detection is active")
-    else:
-      db["active"] = False
-      await message.channel.send("Monkey detection is inactive")
 
   # Monkey word detection
   if db["active"]:
@@ -227,11 +236,11 @@ async def on_message(message):
     await message.channel.send('$list is used to list all the quotes in the database')
 
   if msg.startswith('$htoggle'):
-    await message.channel.send('$toggle is used to toggle plain-text detection (using $ commands will always work, use true to toggle on and anything else to toggle off')
+    await message.channel.send('$toggle is used to toggle plain-text monkey word detection (use true to toggle on and false to toggle off, $ commands cannot be toggled)')
 
   if msg.startswith('$hupdates'):
     await message.channel.send('$updates is used to display planned additions to the bot')
 
-# Links code to bot and keeps it running
+# Links code to bot and keeps it running (Token stored as environment variable for security)
 keep_running()
 client.run(os.environ.get('TOKEN'))

@@ -5,7 +5,6 @@ Made in Python 3.8.12 using:
 - discord.py
 - Flask
 - https://uptimerobot.com
-- https://dadjokes.io/
 
 I claim no onwnership of any quotes or images pulled by this bot
 
