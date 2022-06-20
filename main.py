@@ -24,33 +24,7 @@ monkey_response = [
 ]
 
 banned_words = [
-  "jew",
-  "kys",
-  "kill",
-  "retard",
-  "holocaust",
-  "rape",
-  "murder",
-  "suicide",
-  "whore",
-  "pussy",
-  "homo",
-  "faggot",
-  "dyke",
-  "bussy",
-  "cunt",
-  "queer",
-  "dussy",
-  "shoot",
-  "gun",
-  "knife",
-  "hurt",
-  "injure",
-  "racis",
-  "@",
-  "kkk",
-  "stab",
-  "shoot"
+  "banned phrases go here"
 ]
 
 # Setup and rich presence settings
